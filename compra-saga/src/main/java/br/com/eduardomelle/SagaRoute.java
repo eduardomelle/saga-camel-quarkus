@@ -33,14 +33,27 @@ public class SagaRoute extends RouteBuilder {
     from("direct:newPedido").saga().propagation(SagaPropagation.MANDATORY)
         .compensation("direct:cancelPedido")
         .transform().header(Exchange.SAGA_LONG_RUNNING_ACTION)
-        .bean(pedidoService, "newPedido").log("Pedido $<body> criado");
+        .bean(pedidoService, "newPedido").log("Pedido ${body} criado");
 
     from("direct:cancelPedido")
         .transform().header(Exchange.SAGA_LONG_RUNNING_ACTION)
-        .bean(pedidoService, "cancelPedido").log("Pedido $<body> cancelado");
+        .bean(pedidoService, "cancelPedido").log("Pedido ${body} cancelado");
 
     // Crédito Service:
+    from("direct:newPedidoValor").saga().propagation(SagaPropagation.MANDATORY)
+        .compensation("direct:cancelPedidoValor")
+        .transform().header(Exchange.SAGA_LONG_RUNNING_ACTION)
+        .bean(creditoService, "newPedidoValor")
+        .log("Crédito do pedido ${header.pedidoId} no valor de ${header.valor} reservado para a saga ${body}");
 
+    from("direct:cancelPedidoValor")
+        .transform().header(Exchange.SAGA_LONG_RUNNING_ACTION)
+        .bean(creditoService, "cancelPedidoValor")
+        .log("Crédito do pedido ${header.pedidoId} no valor de ${header.valor} cancelado para a saga ${body}");
+
+    // Finaliza:
+    from("direct:finaliza").saga().propagation(SagaPropagation.MANDATORY)
+        .choice().when(header("fail").isEqualTo(true)).to("").end();
   }
 
 }
