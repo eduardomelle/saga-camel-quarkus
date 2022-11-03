@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import org.apache.camel.Header;
+
 @ApplicationScoped
 public class CreditoService {
 
@@ -16,7 +18,7 @@ public class CreditoService {
     this.creditoTotal = 100;
   }
 
-  public void newPedidoValor(Long pedidoId, int valor) {
+  public void newPedidoValor(@Header("pedidoId") Long pedidoId, @Header("valor") int valor) {
     if (valor > creditoTotal) {
       throw new IllegalStateException("Saldo insuficiente.");
     }
@@ -25,9 +27,8 @@ public class CreditoService {
     pedido_valor.put(pedidoId, valor);
   }
 
-  public void cancelPedidoValor(Long id) {
-    creditoTotal = creditoTotal + pedido_valor.get(id);
-    pedido_valor.remove(id);
+  public void cancelPedidoValor(@Header("id") Long id) {
+    System.out.println("PedidoValor falhou. Iniciando cancelamento do pedido.");
   }
 
   public int getCreditoTotal() {
